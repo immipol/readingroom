@@ -396,13 +396,13 @@
   </div>
 
   <script>
-    // ★★★ 1) 여기: 구글 Apps Script Web App URL 붙여넣기 ★★★
+    // ★★★ 1) 구글 Apps Script Web App URL ★★★
     const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbw_aXJlC31EwipBSLINYrWvixnYu0QHarDkcVB6QBojapyd3HJn_efc2ZCzqC13_IvVqg/exec";
 
-    // ★★★ 2) 여기: 실제 상남정경관 좌표/반경으로 수정 ★★★
+    // ★★★ 2) 실제 상남정경관 좌표/반경 ★★★
     const BUILDING_LAT = 37.587073;   // 예시 위도
     const BUILDING_LNG = 127.030308;  // 예시 경도
-    const RADIUS_M = 100;              // 허용 반경 (미터)
+    const RADIUS_M = 100;             // 허용 반경 (미터)
 
     const STORAGE_KEY = "readingRoomLogs_geofence_v2";
 
@@ -550,7 +550,7 @@
 
     // ★ 구글 시트로 보내는 부분
     async function sendToServer(entry, statusInfo) {
-      if (!ENDPOINT_URL || ENDPOINT_URL.startsWith("https://script.google.com/macros/s/AKfycbw_aXJlC31EwipBSLINYrWvixnYu0QHarDkcVB6QBojapyd3HJn_efc2ZCzqC13_IvVqg/exec")) {
+      if (!ENDPOINT_URL) {
         console.warn("ENDPOINT_URL이 설정되지 않았습니다.");
         return;
       }
@@ -568,9 +568,11 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        // 필요하면 아래 주석 해제해서 응답 확인 가능
-        // const json = await res.json();
-        // console.log("Server response:", json);
+
+        // 에러 상태일 때 경고 표시 (원하면 제거 가능)
+        if (!res.ok) {
+          console.error("Server returned non-OK:", res.status);
+        }
       } catch (e) {
         console.error("Failed to send to server", e);
       }
@@ -580,7 +582,7 @@
       // 1) 구글 시트(서버)로 전송
       sendToServer(baseEntry, statusInfo);
 
-      // 2) 로컬에도 저장 (원하면 유지, 아니면 이 블록 삭제)
+      // 2) 로컬에도 저장
       const logs = loadLogs();
       const entry = {
         ...baseEntry,
@@ -736,6 +738,3 @@
   </script>
 </body>
 </html>
-
-
-
