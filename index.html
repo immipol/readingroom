@@ -397,7 +397,7 @@
 
   <script>
     // ★★★ 1) 구글 Apps Script Web App URL ★★★
-    const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycby7Y3Ag9wHgZ_CS-gX_BLJz9H5hBOzjhIzBVR7M7r2Q-4qnO40KKtP-7ObG_5sfBsaY/exec";
+    const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbzGSBJP8xpvEBjRT1m2u8C4QSa2u7ogFKpYCTaDQRHq-sABOR3naIfjIiiRraQg6DwH/exec";
 
     // ★★★ 2) 실제 상남정경관 좌표/반경 ★★★
     const BUILDING_LAT = 37.587073;   // 예시 위도
@@ -548,7 +548,7 @@
       }, 4000);
     }
 
-  // ★ 구글 시트로 보내는 부분 (URL-encoded 방식)
+// ★ 구글 시트로 보내는 부분 (쿼리스트링으로 전송)
 async function sendToServer(entry, statusInfo) {
   if (!ENDPOINT_URL) {
     console.warn("ENDPOINT_URL이 설정되지 않았습니다.");
@@ -562,7 +562,7 @@ async function sendToServer(entry, statusInfo) {
     userAgent: navigator.userAgent
   };
 
-  // application/x-www-form-urlencoded 형식으로 전송
+  // 1) 쿼리스트링 만들기
   const params = new URLSearchParams();
   Object.keys(payload).forEach((key) => {
     if (payload[key] !== undefined && payload[key] !== null) {
@@ -570,10 +570,13 @@ async function sendToServer(entry, statusInfo) {
     }
   });
 
+  // 2) URL에 붙여서 전송 (POST지만 body는 비우고, 파라미터는 URL에)
+  const url = ENDPOINT_URL + "?" + params.toString();
+
   try {
-    const res = await fetch(ENDPOINT_URL, {
-      method: "POST",
-      body: params,        // ★ headers 안 넣음 (기본 form 전송)
+    const res = await fetch(url, {
+      method: "POST"
+      // body 없음, headers 없음 → 파라미터는 전부 URL 쿼리로만 전달
     });
 
     if (!res.ok) {
@@ -744,5 +747,6 @@ async function sendToServer(entry, statusInfo) {
   </script>
 </body>
 </html>
+
 
 
