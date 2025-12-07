@@ -548,35 +548,41 @@
       }, 4000);
     }
 
-    // ★ 구글 시트로 보내는 부분
-    async function sendToServer(entry, statusInfo) {
-      if (!ENDPOINT_URL) {
-        console.warn("ENDPOINT_URL이 설정되지 않았습니다.");
-        return;
-      }
+  // ★ 구글 시트로 보내는 부분 (URL-encoded 방식)
+async function sendToServer(entry, statusInfo) {
+  if (!ENDPOINT_URL) {
+    console.warn("ENDPOINT_URL이 설정되지 않았습니다.");
+    return;
+  }
 
-      const payload = {
-        ...entry,
-        locationStatus: statusInfo.status,
-        distanceMeters: statusInfo.distanceMeters,
-        userAgent: navigator.userAgent
-      };
+  const payload = {
+    ...entry,
+    locationStatus: statusInfo.status,
+    distanceMeters: statusInfo.distanceMeters,
+    userAgent: navigator.userAgent
+  };
 
-      try {
-        const res = await fetch(ENDPOINT_URL, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-
-        // 에러 상태일 때 경고 표시 (원하면 제거 가능)
-        if (!res.ok) {
-          console.error("Server returned non-OK:", res.status);
-        }
-      } catch (e) {
-        console.error("Failed to send to server", e);
-      }
+  // application/x-www-form-urlencoded 형식으로 전송
+  const params = new URLSearchParams();
+  Object.keys(payload).forEach((key) => {
+    if (payload[key] !== undefined && payload[key] !== null) {
+      params.append(key, String(payload[key]));
     }
+  });
+
+  try {
+    const res = await fetch(ENDPOINT_URL, {
+      method: "POST",
+      body: params,        // ★ headers 안 넣음 (기본 form 전송)
+    });
+
+    if (!res.ok) {
+      console.error("Server returned non-OK:", res.status);
+    }
+  } catch (e) {
+    console.error("Failed to send to server", e);
+  }
+}
 
     function saveEntryWithLocationStatus(baseEntry, statusInfo) {
       // 1) 구글 시트(서버)로 전송
@@ -738,4 +744,5 @@
   </script>
 </body>
 </html>
+
 
