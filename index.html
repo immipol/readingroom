@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<index.html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
@@ -396,13 +396,13 @@
   </div>
 
   <script>
-    // ★★★ 1) 구글 Apps Script Web App URL ★★★
-    const ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbyLwd3IddbD8i6qtZJ2ymxjI9PDF7SKt_hhGBm1Lu8x7zjc4LFxgh5o5H6nACrZoM6P/exec";
+    // ★★★ 1) 여기: 구글 Apps Script Web App URL 붙여넣기 ★★★
+    const ENDPOINT_URL = "https://script.google.com/macros/s/XXXXXXXX/exec";
 
-    // ★★★ 2) 실제 상남정경관 좌표/반경 ★★★
-    const BUILDING_LAT = 37.587073;   // 예시 위도
-    const BUILDING_LNG = 127.030308;  // 예시 경도
-    const RADIUS_M = 100;             // 허용 반경 (미터)
+    // ★★★ 2) 여기: 실제 상남정경관 좌표/반경으로 수정 ★★★
+    const BUILDING_LAT = 37.590000;   // 예시 위도
+    const BUILDING_LNG = 127.033000;  // 예시 경도
+    const RADIUS_M = 60;              // 허용 반경 (미터)
 
     const STORAGE_KEY = "readingRoomLogs_geofence_v2";
 
@@ -548,50 +548,39 @@
       }, 4000);
     }
 
-// ★ 구글 시트로 보내는 부분 (쿼리스트링으로 전송)
-async function sendToServer(entry, statusInfo) {
-  if (!ENDPOINT_URL) {
-    console.warn("ENDPOINT_URL이 설정되지 않았습니다.");
-    return;
-  }
+    // ★ 구글 시트로 보내는 부분
+    async function sendToServer(entry, statusInfo) {
+      if (!ENDPOINT_URL || ENDPOINT_URL.startsWith("https://script.google.com/macros/s/XXXXXXXX")) {
+        console.warn("ENDPOINT_URL이 설정되지 않았습니다.");
+        return;
+      }
 
-  const payload = {
-    ...entry,
-    locationStatus: statusInfo.status,
-    distanceMeters: statusInfo.distanceMeters,
-    userAgent: navigator.userAgent
-  };
+      const payload = {
+        ...entry,
+        locationStatus: statusInfo.status,
+        distanceMeters: statusInfo.distanceMeters,
+        userAgent: navigator.userAgent
+      };
 
-  // 1) 쿼리스트링 만들기
-  const params = new URLSearchParams();
-  Object.keys(payload).forEach((key) => {
-    if (payload[key] !== undefined && payload[key] !== null) {
-      params.append(key, String(payload[key]));
+      try {
+        const res = await fetch(ENDPOINT_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        // 필요하면 아래 주석 해제해서 응답 확인 가능
+        // const json = await res.json();
+        // console.log("Server response:", json);
+      } catch (e) {
+        console.error("Failed to send to server", e);
+      }
     }
-  });
-
-  // 2) URL에 붙여서 전송 (POST지만 body는 비우고, 파라미터는 URL에)
-  const url = ENDPOINT_URL + "?" + params.toString();
-
-  try {
-    const res = await fetch(url, {
-      method: "POST"
-      // body 없음, headers 없음 → 파라미터는 전부 URL 쿼리로만 전달
-    });
-
-    if (!res.ok) {
-      console.error("Server returned non-OK:", res.status);
-    }
-  } catch (e) {
-    console.error("Failed to send to server", e);
-  }
-}
 
     function saveEntryWithLocationStatus(baseEntry, statusInfo) {
       // 1) 구글 시트(서버)로 전송
       sendToServer(baseEntry, statusInfo);
 
-      // 2) 로컬에도 저장
+      // 2) 로컬에도 저장 (원하면 유지, 아니면 이 블록 삭제)
       const logs = loadLogs();
       const entry = {
         ...baseEntry,
@@ -747,7 +736,3 @@ async function sendToServer(entry, statusInfo) {
   </script>
 </body>
 </html>
-
-
-
-
